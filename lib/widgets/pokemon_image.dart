@@ -34,7 +34,7 @@ class PokemonImage extends StatelessWidget {
                   width: 22,
                   height: 22,
                   child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary))),
-      errorBuilder: (_, __, ___) => _placeholder(),
+      errorBuilder: (_, _, _) => _placeholder(),
     );
   }
 }

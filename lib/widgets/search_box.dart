@@ -44,7 +44,7 @@ class SearchBox extends StatelessWidget {
           ),
           ValueListenableBuilder<TextEditingValue>(
             valueListenable: controller,
-            builder: (_, value, __) => value.text.isEmpty
+            builder: (_, value, _) => value.text.isEmpty
                 ? const SizedBox.shrink()
                 : GestureDetector(
                     onTap: onClear ?? controller.clear,
