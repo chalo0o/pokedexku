@@ -1,0 +1,10 @@
+[
+  {
+    "id": 1,
+    "title": "Judul Item",
+    "category": "Kategori A",
+    "date": "2025-10-04",
+    "image": "assets/images/item1.jpg",
+    "description": "Deskripsi lengkap item..."
+  }
+]
