@@ -8,12 +8,23 @@ class QuizQuestion {
   final String prompt;
   final String correctAnswer;
   final List<String> options;
+  final String? imageUrl;
 
   const QuizQuestion({
     required this.prompt,
     required this.correctAnswer,
     required this.options,
+    this.imageUrl,
   });
+
+  QuizQuestion copyWith({String? imageUrl}) {
+    return QuizQuestion(
+      prompt: prompt,
+      correctAnswer: correctAnswer,
+      options: options,
+      imageUrl: imageUrl ?? this.imageUrl,
+    );
+  }
 }
 
 /// Menyusun soal dari rantai evolusi dan daftar nama Pokémon acak.

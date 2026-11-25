@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -40,8 +41,16 @@ class _QuizPageState extends State<QuizPage> {
   bool _isLoading = true;
   bool _answered = false;
   bool _lastCorrect = false;
+  String? _selectedAnswer;
   bool _notificationsEnabled = true;
   Object? _loadError;
+  Timer? _advanceTimer;
+
+  @override
+  void dispose() {
+    _advanceTimer?.cancel();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -76,11 +85,14 @@ class _QuizPageState extends State<QuizPage> {
   }
 
   Future<void> _loadQuestion() async {
+    _advanceTimer?.cancel();
+    _advanceTimer = null;
     if (mounted) {
       setState(() {
         _isLoading = true;
         _question = null;
         _answered = false;
+        _selectedAnswer = null;
         _loadError = null;
       });
     }
@@ -106,7 +118,15 @@ class _QuizPageState extends State<QuizPage> {
         );
         final built = candidate.buildQuestion();
         if (built != null) {
-          question = built;
+          // Sprite hanya untuk feedback; gagal fetch tidak menggagalkan soal.
+          try {
+            final preview = await widget.api.fetchPokemonPreview(
+              built.correctAnswer,
+            );
+            question = built.copyWith(imageUrl: preview.imageUrl);
+          } catch (_) {
+            question = built;
+          }
           engine = candidate;
           break;
         }
@@ -133,15 +153,20 @@ class _QuizPageState extends State<QuizPage> {
       return;
     }
     final correct = engine.isCorrect(option, question);
+    // Tutup jendela dobel tap sebelum menunggu I/O.
+    setState(() {
+      _answered = true;
+      _lastCorrect = correct;
+      _selectedAnswer = option;
+    });
+    _advanceTimer?.cancel();
+    _advanceTimer = Timer(const Duration(seconds: 2), _loadQuestion);
+
     await widget.storage.recordAnswer(correct: correct);
     await widget.notifier.showQuizResult(correct: correct);
     if (!mounted) {
       return;
     }
-    setState(() {
-      _answered = true;
-      _lastCorrect = correct;
-    });
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
@@ -207,6 +232,8 @@ class _QuizPageState extends State<QuizPage> {
                         _stat('Streak terbaik: ${storage.bestStreak}'),
                       ],
                     ),
+                    const SizedBox(height: 8),
+                    _streakMeter(storage.streak),
                     const SizedBox(height: 20),
                     _buildQuestion(),
                     const SizedBox(height: 24),
@@ -253,6 +280,49 @@ class _QuizPageState extends State<QuizPage> {
         color: AppColors.text,
       ),
     );
+  }
+
+  Widget _streakMeter(int streak) {
+    final filled = streak.clamp(0, 5);
+    return Row(
+      key: const Key('quiz-streak-meter'),
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (var i = 0; i < 5; i++)
+          Container(
+            margin: const EdgeInsets.only(right: 4),
+            width: 18,
+            height: 6,
+            decoration: BoxDecoration(
+              color: i < filled ? AppColors.primary : AppColors.card,
+              borderRadius: BorderRadius.circular(3),
+              border: Border.all(color: AppColors.primary),
+            ),
+          ),
+        const SizedBox(width: 6),
+        Text(
+          'Streak $filled/5',
+          style: GoogleFonts.poppins(fontSize: 11, color: AppColors.muted),
+        ),
+      ],
+    );
+  }
+
+  ({Color background, Color foreground}) _optionColors(
+    String option,
+    QuizQuestion question,
+  ) {
+    final background = !_answered
+        ? AppColors.card
+        : option == question.correctAnswer
+        ? Colors.green.shade700
+        : option == _selectedAnswer
+        ? Colors.red.shade700
+        : AppColors.card;
+    final foreground = background == AppColors.card
+        ? AppColors.text
+        : Colors.white;
+    return (background: background, foreground: foreground);
   }
 
   Widget _buildQuestion() {
@@ -310,21 +380,65 @@ class _QuizPageState extends State<QuizPage> {
         for (final option in question.options) ...[
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
-            child: OutlinedButton(
-              style: OutlinedButton.styleFrom(
-                side: BorderSide(color: AppColors.primary),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+            child: AnimatedContainer(
+              key: Key('quiz-option-$option'),
+              duration: const Duration(milliseconds: 250),
+              decoration: BoxDecoration(
+                color: _optionColors(option, question).background,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.primary),
               ),
-              onPressed: _answered ? null : () => _answer(option),
-              child: Text(
-                titleCase(option),
-                style: GoogleFonts.poppins(color: AppColors.text),
+              child: InkWell(
+                onTap: _answered ? null : () => _answer(option),
+                borderRadius: BorderRadius.circular(12),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 14,
+                    horizontal: 16,
+                  ),
+                  child: Text(
+                    titleCase(option),
+                    style: GoogleFonts.poppins(
+                      color: _optionColors(option, question).foreground,
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
         ],
+        const SizedBox(height: 12),
+        AnimatedSwitcher(
+          key: const Key('quiz-sprite-switcher'),
+          duration: const Duration(milliseconds: 300),
+          switchInCurve: Curves.easeOutBack,
+          transitionBuilder: (child, animation) => FadeTransition(
+            opacity: animation,
+            child: ScaleTransition(scale: animation, child: child),
+          ),
+          child: !_answered
+              ? const SizedBox.shrink(key: ValueKey('hidden'))
+              : question.imageUrl != null
+              ? ClipRRect(
+                  key: ValueKey(question.imageUrl),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.network(
+                    question.imageUrl!,
+                    key: const Key('quiz-feedback-image'),
+                    width: 96,
+                    height: 96,
+                    fit: BoxFit.contain,
+                    cacheWidth: 288,
+                    errorBuilder: (_, _, _) =>
+                        const SizedBox(width: 96, height: 96),
+                  ),
+                )
+              : const Text(
+                  'Sprite tidak tersedia.',
+                  key: ValueKey('no-image'),
+                  style: TextStyle(fontSize: 11, color: AppColors.muted),
+                ),
+        ),
         if (_answered) ...[
           const SizedBox(height: 8),
           Text(

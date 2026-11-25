@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -11,6 +12,7 @@ import 'package:ma_game/services/evolution_api_service.dart';
 import 'package:ma_game/services/game_storage.dart';
 import 'package:ma_game/services/notification_service.dart';
 import 'package:ma_game/services/pokemon_api_service.dart';
+import 'package:ma_game/utils/constants.dart';
 
 class FakeNotifier implements Notifier {
   final bool initializeResult;
@@ -30,6 +32,16 @@ class FakeNotifier implements Notifier {
   @override
   Future<void> showQuizResult({required bool correct}) async {
     results.add(correct);
+  }
+}
+
+class SlowNotifier extends FakeNotifier {
+  final Completer<void> gate = Completer<void>();
+
+  @override
+  Future<void> showQuizResult({required bool correct}) async {
+    results.add(correct);
+    await gate.future;
   }
 }
 
@@ -58,6 +70,11 @@ class FakePokemonApiService extends PokemonApiService {
 }
 
 class FakeEvolutionApiService extends EvolutionApiService {
+  final Object? previewError;
+  int fetchChainCalls = 0;
+
+  FakeEvolutionApiService({this.previewError});
+
   @override
   Future<SpeciesInfo> fetchSpecies(String nameOrId) async {
     return SpeciesInfo(name: nameOrId, id: 4, chainId: 1);
@@ -68,12 +85,26 @@ class FakeEvolutionApiService extends EvolutionApiService {
     int chainId, {
     bool enrich = true,
   }) async {
+    fetchChainCalls++;
     return EvolutionChainInfo(
       root: EvolutionNode(
         name: 'charmander',
         id: 4,
         evolvesTo: [EvolutionNode(name: 'charmeleon', id: 5)],
       ),
+    );
+  }
+
+  @override
+  Future<({String? imageUrl, List<String> types})> fetchPokemonPreview(
+    String name,
+  ) async {
+    if (previewError != null) {
+      throw previewError!;
+    }
+    return (
+      imageUrl: 'https://example.com/charmeleon.png',
+      types: const ['fire'],
     );
   }
 }
@@ -89,17 +120,27 @@ void main() {
     FakeNotifier? notifier,
     GameStorage? storage,
     PokemonApiService? listApi,
+    EvolutionApiService? api,
   }) async {
     final usedStorage = storage ?? GameStorage();
     await usedStorage.init();
     return QuizPage(
       storage: usedStorage,
       listApi: listApi ?? FakePokemonApiService(),
-      api: FakeEvolutionApiService(),
+      api: api ?? FakeEvolutionApiService(),
       notifier: notifier ?? FakeNotifier(),
       random: Random(1),
     );
   }
+
+  Finder option(String name) => find.byKey(Key('quiz-option-$name'));
+
+  Finder findWrongOption() => find.byWidgetPredicate((widget) {
+    final key = widget.key;
+    return key is ValueKey<String> &&
+        key.value.startsWith('quiz-option-') &&
+        key.value != 'quiz-option-charmeleon';
+  });
 
   testWidgets('jawaban benar menaikkan skor dan memanggil notifier', (
     tester,
@@ -115,6 +156,181 @@ void main() {
 
     expect(find.textContaining('Skor: 1'), findsOneWidget);
     expect(notifier.results.last, true);
+  });
+
+  testWidgets('sprite jawaban benar tersedia di question', (tester) async {
+    await tester.pumpWidget(MaterialApp(home: await buildPage()));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Charmeleon'));
+    await tester.pump();
+
+    final image = tester.widget<Image>(
+      find.byKey(const Key('quiz-feedback-image')),
+    );
+    // cacheWidth membungkus provider dengan ResizeImage.
+    final provider = image.image is ResizeImage
+        ? (image.image as ResizeImage).imageProvider
+        : image.image;
+    expect(provider, isA<NetworkImage>());
+    expect(
+      (provider as NetworkImage).url,
+      'https://example.com/charmeleon.png',
+    );
+  });
+
+  testWidgets('opsi salah berubah merah dan opsi benar hijau', (tester) async {
+    await tester.pumpWidget(MaterialApp(home: await buildPage()));
+    await tester.pumpAndSettle();
+
+    await tester.tap(findWrongOption().first);
+    await tester.pump();
+
+    final correct = tester.widget<AnimatedContainer>(option('charmeleon'));
+    final wrong = tester.widget<AnimatedContainer>(findWrongOption().first);
+    expect((correct.decoration as BoxDecoration).color, Colors.green.shade700);
+    expect((wrong.decoration as BoxDecoration).color, Colors.red.shade700);
+  });
+
+  testWidgets('opsi netral tetap terbaca setelah menjawab', (tester) async {
+    await tester.pumpWidget(MaterialApp(home: await buildPage()));
+    await tester.pumpAndSettle();
+
+    await tester.tap(option('charmeleon'));
+    await tester.pump();
+
+    final neutralText = tester.widget<Text>(
+      find.descendant(of: findWrongOption().first, matching: find.byType(Text)),
+    );
+    expect(neutralText.style?.color, AppColors.text);
+  });
+
+  testWidgets('sprite reveal benar-benar beranimasi', (tester) async {
+    await tester.pumpWidget(MaterialApp(home: await buildPage()));
+    await tester.pumpAndSettle();
+
+    await tester.tap(option('charmeleon'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 150));
+
+    // AnimatedSwitcher punya entry lama dan baru saat transisi berjalan.
+    final fades = tester.widgetList<FadeTransition>(
+      find.descendant(
+        of: find.byKey(const Key('quiz-sprite-switcher')),
+        matching: find.byType(FadeTransition),
+      ),
+    );
+    expect(
+      fades.any((fade) => fade.opacity.value > 0 && fade.opacity.value < 1),
+      isTrue,
+    );
+  });
+
+  testWidgets('dobel tap tidak menyisakan timer bocor', (tester) async {
+    final notifier = SlowNotifier();
+    final api = FakeEvolutionApiService();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: await buildPage(api: api, notifier: notifier),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(option('charmeleon'));
+    await tester.tap(option('charmeleon'));
+    notifier.gate.complete();
+    await tester.pumpAndSettle();
+    expect(notifier.results, [true]);
+
+    await tester.ensureVisible(find.text('Soal berikutnya'));
+    await tester.pump();
+    await tester.tap(find.text('Soal berikutnya'));
+    await tester.pumpAndSettle();
+    final afterManual = api.fetchChainCalls;
+
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pumpAndSettle();
+    expect(api.fetchChainCalls, afterManual);
+  });
+
+  testWidgets('timer dibatalkan saat halaman ditutup', (tester) async {
+    final api = FakeEvolutionApiService();
+    await tester.pumpWidget(MaterialApp(home: await buildPage(api: api)));
+    await tester.pumpAndSettle();
+    final before = api.fetchChainCalls;
+
+    await tester.tap(option('charmeleon'));
+    await tester.pump();
+    await tester.pumpWidget(const MaterialApp(home: SizedBox.shrink()));
+    await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pumpAndSettle();
+
+    expect(api.fetchChainCalls, before);
+  });
+
+  testWidgets('meter streak mengikuti jawaban', (tester) async {
+    await tester.pumpWidget(MaterialApp(home: await buildPage()));
+    await tester.pumpAndSettle();
+
+    await tester.tap(option('charmeleon'));
+    await tester.pump();
+    expect(find.text('Streak 1/5'), findsOneWidget);
+
+    await tester.ensureVisible(find.text('Soal berikutnya'));
+    await tester.pump();
+    await tester.tap(find.text('Soal berikutnya'));
+    await tester.pumpAndSettle();
+    await tester.tap(findWrongOption().first);
+    await tester.pump();
+    expect(find.text('Streak 0/5'), findsOneWidget);
+  });
+
+  testWidgets('soal lanjut otomatis setelah dua detik', (tester) async {
+    final api = FakeEvolutionApiService();
+    await tester.pumpWidget(MaterialApp(home: await buildPage(api: api)));
+    await tester.pumpAndSettle();
+    final before = api.fetchChainCalls;
+
+    await tester.tap(option('charmeleon'));
+    await tester.pump();
+    expect(find.textContaining('Kamu benar!'), findsOneWidget);
+
+    await tester.pump(const Duration(seconds: 2));
+    await tester.pumpAndSettle();
+    expect(api.fetchChainCalls, greaterThan(before));
+    expect(find.textContaining('Kamu benar!'), findsNothing);
+  });
+
+  testWidgets('tombol soal berikutnya membatalkan timer', (tester) async {
+    final api = FakeEvolutionApiService();
+    await tester.pumpWidget(MaterialApp(home: await buildPage(api: api)));
+    await tester.pumpAndSettle();
+
+    await tester.tap(option('charmeleon'));
+    await tester.pump();
+    await tester.ensureVisible(find.text('Soal berikutnya'));
+    await tester.pump();
+    await tester.tap(find.text('Soal berikutnya'));
+    await tester.pumpAndSettle();
+    final afterManual = api.fetchChainCalls;
+
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pumpAndSettle();
+    expect(api.fetchChainCalls, afterManual);
+  });
+
+  testWidgets('sprite gagal tidak menggagalkan soal', (tester) async {
+    final api = FakeEvolutionApiService(
+      previewError: ApiException('Gagal mengambil sprite.'),
+    );
+    await tester.pumpWidget(MaterialApp(home: await buildPage(api: api)));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Siapa evolusi berikutnya'), findsOneWidget);
+    await tester.tap(option('charmeleon'));
+    await tester.pump();
+    expect(find.textContaining('Kamu benar!'), findsOneWidget);
   });
 
   testWidgets('toggle notifikasi menyimpan preferensi dan jadwal', (

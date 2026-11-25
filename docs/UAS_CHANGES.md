@@ -29,7 +29,8 @@ Project UAS dilanjutkan dari project UTS **Pokédexku** (Flutter, data dinamis d
 - Skor sesi direset saat halaman Tantangan dibuka; skor terbaik dan streak terbaik tetap tersimpan di perangkat setelah aplikasi ditutup.
 - Pengganggu soal diambil secara acak; cabang evolusi yang ambigu (mis. Eevee) tidak dipakai sebagai soal.
 - Gagal memuat data menampilkan pesan kesalahan yang ramah dan tombol "Coba lagi".
-- Tombol "Soal berikutnya" mengambil soal baru.
+- Interaktif: opsi berubah warna (hijau untuk jawaban benar, merah untuk opsi salah yang dipilih), sprite jawaban muncul dengan animasi fade + scale, dan meter streak 5 titik mengikuti jawaban.
+- Setelah menjawab, soal berikutnya dimuat otomatis dalam 2 detik; tombol "Soal berikutnya" tetap bisa dipakai untuk lanjut lebih cepat dan membatalkan timer.
 
 ### 3. Notifikasi
 - Izin notifikasi diminta sekali saat aplikasi dibuka.
@@ -66,7 +67,7 @@ Project UAS dilanjutkan dari project UTS **Pokédexku** (Flutter, data dinamis d
 ## Bukti verifikasi
 - `dart format --output=none --set-exit-if-changed lib test` → exit 0, 0 file berubah.
 - `flutter analyze` → **No issues found!** (exit 0).
-- `flutter test` → **All tests passed** (27 test, exit 0).
+- `flutter test` → **All tests passed** (37 test, exit 0).
 - `flutter build apk --debug` → `build/app/outputs/flutter-apk/app-debug.apk` (exit 0).
 - `flutter build web --release` → `build/web` (exit 0).
 - Manifest hasil build (`build/app/intermediates/merged_manifests/debug/processDebugManifest/AndroidManifest.xml`) memuat `RECEIVE_BOOT_COMPLETED`, `ScheduledNotificationReceiver`, dan `ScheduledNotificationBootReceiver`.
