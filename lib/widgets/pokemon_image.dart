@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../utils/constants.dart';
 
 /// Gambar dari URL dengan indikator memuat dan placeholder bila gagal.
@@ -8,15 +9,27 @@ class PokemonImage extends StatelessWidget {
   final BoxFit fit;
   final int cacheWidth;
 
-  const PokemonImage(this.url,
-      {super.key, this.width, this.height, this.fit = BoxFit.contain, this.cacheWidth = 300});
+  const PokemonImage(
+    this.url, {
+    super.key,
+    this.width,
+    this.height,
+    this.fit = BoxFit.contain,
+    this.cacheWidth = 300,
+  });
 
   Widget _placeholder({Widget? child}) => Container(
-        width: width,
-        height: height,
-        alignment: Alignment.center,
-        child: child ?? const Icon(Icons.catching_pokemon, color: AppColors.placeholder, size: 48),
-      );
+    width: width,
+    height: height,
+    alignment: Alignment.center,
+    child:
+        child ??
+        const Icon(
+          Icons.catching_pokemon,
+          color: AppColors.placeholder,
+          size: 48,
+        ),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -31,9 +44,14 @@ class PokemonImage extends StatelessWidget {
           ? child
           : _placeholder(
               child: const SizedBox(
-                  width: 22,
-                  height: 22,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary))),
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.primary,
+                ),
+              ),
+            ),
       errorBuilder: (_, _, _) => _placeholder(),
     );
   }

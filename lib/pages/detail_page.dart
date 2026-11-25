@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '../models/pokemon_detail_model.dart';
 import '../services/pokemon_api_service.dart';
 import '../utils/constants.dart';
@@ -15,7 +16,10 @@ class DetailPage extends StatefulWidget {
   const DetailPage({super.key, required this.pokemonId});
 
   static void open(BuildContext context, int id) {
-    Navigator.push(context, MaterialPageRoute(builder: (_) => DetailPage(pokemonId: id)));
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => DetailPage(pokemonId: id)),
+    );
   }
 
   @override
@@ -32,7 +36,8 @@ class _DetailPageState extends State<DetailPage> {
     _future = _api.fetchDetail(widget.pokemonId);
   }
 
-  void _reload() => setState(() => _future = _api.fetchDetail(widget.pokemonId));
+  void _reload() =>
+      setState(() => _future = _api.fetchDetail(widget.pokemonId));
 
   @override
   Widget build(BuildContext context) {
@@ -42,17 +47,21 @@ class _DetailPageState extends State<DetailPage> {
         builder: (context, snap) {
           // 1. LOADING
           if (snap.connectionState != ConnectionState.done) {
-            return Stack(children: [
-              const LoadingView(message: 'Memuat detail Pokémon...'),
-              _backButton(),
-            ]);
+            return Stack(
+              children: [
+                const LoadingView(message: 'Memuat detail Pokémon...'),
+                _backButton(),
+              ],
+            );
           }
           // 2. ERROR
           if (snap.hasError) {
-            return Stack(children: [
-              ErrorView(error: snap.error!, onRetry: _reload),
-              _backButton(),
-            ]);
+            return Stack(
+              children: [
+                ErrorView(error: snap.error!, onRetry: _reload),
+                _backButton(),
+              ],
+            );
           }
           // 3. SUCCESS
           return _content(snap.data!);
@@ -78,7 +87,9 @@ class _DetailPageState extends State<DetailPage> {
   }
 
   Widget _content(PokemonDetail d) {
-    final color = d.types.isNotEmpty ? typeColor(d.types.first) : AppColors.primary;
+    final color = d.types.isNotEmpty
+        ? typeColor(d.types.first)
+        : AppColors.primary;
     final h = MediaQuery.of(context).size.height;
     return Stack(
       children: [
@@ -106,11 +117,15 @@ class _DetailPageState extends State<DetailPage> {
   Widget _card(PokemonDetail d, Color color) {
     return Container(
       width: double.infinity,
-      constraints: BoxConstraints(minHeight: MediaQuery.of(context).size.height * 0.67),
+      constraints: BoxConstraints(
+        minHeight: MediaQuery.of(context).size.height * 0.67,
+      ),
       padding: const EdgeInsets.all(24),
       decoration: const BoxDecoration(
         color: AppColors.background,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.sheet)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppRadius.sheet),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -118,25 +133,48 @@ class _DetailPageState extends State<DetailPage> {
           Row(
             children: [
               Expanded(
-                child: Text(titleCase(d.name),
-                    style: GoogleFonts.poppins(
-                        fontSize: 26, fontWeight: FontWeight.bold, color: AppColors.text)),
-              ),
-              Text(dexNumber(d.id),
+                child: Text(
+                  titleCase(d.name),
                   style: GoogleFonts.poppins(
-                      fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.muted)),
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.text,
+                  ),
+                ),
+              ),
+              Text(
+                dexNumber(d.id),
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.muted,
+                ),
+              ),
             ],
           ),
           if (d.genus.isNotEmpty)
-            Text(d.genus, style: GoogleFonts.poppins(fontSize: 12, color: AppColors.muted)),
+            Text(
+              d.genus,
+              style: GoogleFonts.poppins(fontSize: 12, color: AppColors.muted),
+            ),
           const SizedBox(height: 12),
-          Wrap(spacing: 8, runSpacing: 8, children: [for (final t in d.types) TypeBadge(t)]),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [for (final t in d.types) TypeBadge(t)],
+          ),
           if (d.description.isNotEmpty) ...[
             const SizedBox(height: 20),
             _sectionTitle('Deskripsi'),
             const SizedBox(height: 6),
-            Text(d.description,
-                style: GoogleFonts.poppins(fontSize: 13, height: 1.6, color: AppColors.muted)),
+            Text(
+              d.description,
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                height: 1.6,
+                color: AppColors.muted,
+              ),
+            ),
           ],
           const SizedBox(height: 20),
           Row(
@@ -157,15 +195,23 @@ class _DetailPageState extends State<DetailPage> {
             children: [
               for (final a in d.abilities)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(color: Colors.black12),
                   ),
                   child: Text(
-                    a.isHidden ? '${titleCase(a.name)} (tersembunyi)' : titleCase(a.name),
-                    style: GoogleFonts.poppins(fontSize: 12, color: AppColors.text),
+                    a.isHidden
+                        ? '${titleCase(a.name)} (tersembunyi)'
+                        : titleCase(a.name),
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      color: AppColors.text,
+                    ),
                   ),
                 ),
             ],
@@ -179,9 +225,14 @@ class _DetailPageState extends State<DetailPage> {
     );
   }
 
-  Widget _sectionTitle(String t) => Text(t,
-      style: GoogleFonts.poppins(
-          fontSize: 17, fontWeight: FontWeight.w600, color: AppColors.text));
+  Widget _sectionTitle(String t) => Text(
+    t,
+    style: GoogleFonts.poppins(
+      fontSize: 17,
+      fontWeight: FontWeight.w600,
+      color: AppColors.text,
+    ),
+  );
 
   Widget _infoBox(String label, String value) {
     return Expanded(
@@ -193,10 +244,18 @@ class _DetailPageState extends State<DetailPage> {
         ),
         child: Column(
           children: [
-            Text(value,
-                style: GoogleFonts.poppins(
-                    fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.text)),
-            Text(label, style: GoogleFonts.poppins(fontSize: 11, color: AppColors.muted)),
+            Text(
+              value,
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.text,
+              ),
+            ),
+            Text(
+              label,
+              style: GoogleFonts.poppins(fontSize: 11, color: AppColors.muted),
+            ),
           ],
         ),
       ),
@@ -211,14 +270,21 @@ class _DetailPageState extends State<DetailPage> {
         children: [
           SizedBox(
             width: 64,
-            child: Text(s.label,
-                style: GoogleFonts.poppins(fontSize: 12, color: AppColors.muted)),
+            child: Text(
+              s.label,
+              style: GoogleFonts.poppins(fontSize: 12, color: AppColors.muted),
+            ),
           ),
           SizedBox(
             width: 38,
-            child: Text('${s.value}',
-                style: GoogleFonts.poppins(
-                    fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.text)),
+            child: Text(
+              '${s.value}',
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: AppColors.text,
+              ),
+            ),
           ),
           Expanded(
             child: ClipRRect(

@@ -59,7 +59,10 @@ class PokemonDetail {
     required this.genus,
   });
 
-  factory PokemonDetail.fromJson(Map<String, dynamic> json, Map<String, dynamic>? species) {
+  factory PokemonDetail.fromJson(
+    Map<String, dynamic> json,
+    Map<String, dynamic>? species,
+  ) {
     final id = (json['id'] as num?)?.toInt() ?? 0;
 
     final types = (json['types'] as List? ?? [])
@@ -70,19 +73,23 @@ class PokemonDetail {
 
     final abilities = (json['abilities'] as List? ?? [])
         .whereType<Map>()
-        .map((a) => PokemonAbility(
-              name: asText((a['ability'] as Map?)?['name']),
-              isHidden: a['is_hidden'] == true,
-            ))
+        .map(
+          (a) => PokemonAbility(
+            name: asText((a['ability'] as Map?)?['name']),
+            isHidden: a['is_hidden'] == true,
+          ),
+        )
         .where((a) => a.name.isNotEmpty)
         .toList();
 
     final stats = (json['stats'] as List? ?? [])
         .whereType<Map>()
-        .map((s) => PokemonStat(
-              name: asText((s['stat'] as Map?)?['name']),
-              value: (s['base_stat'] as num?)?.toInt() ?? 0,
-            ))
+        .map(
+          (s) => PokemonStat(
+            name: asText((s['stat'] as Map?)?['name']),
+            value: (s['base_stat'] as num?)?.toInt() ?? 0,
+          ),
+        )
         .toList();
 
     // Gambar: official artwork dari respons, cadangan dari repo sprites.
@@ -96,7 +103,8 @@ class PokemonDetail {
     var description = '';
     var genus = '';
     if (species != null) {
-      for (final e in (species['flavor_text_entries'] as List? ?? []).whereType<Map>()) {
+      for (final e
+          in (species['flavor_text_entries'] as List? ?? []).whereType<Map>()) {
         if (asText((e['language'] as Map?)?['name']) == 'en') {
           description = asText(e['flavor_text']);
         }

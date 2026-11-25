@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '../models/pokemon_model.dart';
 import '../pages/detail_page.dart';
 import '../utils/constants.dart';
@@ -20,7 +21,13 @@ class PokemonCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.card,
           borderRadius: BorderRadius.circular(AppRadius.card),
-          boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 2))],
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 6,
+              offset: Offset(0, 2),
+            ),
+          ],
         ),
         child: Column(
           children: [
@@ -28,13 +35,20 @@ class PokemonCard extends StatelessWidget {
               child: PokemonImage(pokemon.imageUrl, width: double.infinity),
             ),
             const SizedBox(height: 6),
-            Text(dexNumber(pokemon.id),
-                style: GoogleFonts.poppins(fontSize: 11, color: AppColors.muted)),
-            Text(titleCase(pokemon.name),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.poppins(
-                    fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.text)),
+            Text(
+              dexNumber(pokemon.id),
+              style: GoogleFonts.poppins(fontSize: 11, color: AppColors.muted),
+            ),
+            Text(
+              titleCase(pokemon.name),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppColors.text,
+              ),
+            ),
           ],
         ),
       ),

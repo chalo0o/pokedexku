@@ -2,7 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
+
 import 'package:http/http.dart' as http;
+
 import '../models/pokemon_detail_model.dart';
 import '../models/pokemon_model.dart';
 
@@ -24,8 +26,13 @@ class PokemonApiService {
 
   /// GET /pokemon?limit=&offset= (paginasi).
   Future<PokemonPage> fetchPage({int limit = 20, int offset = 0}) async {
-    final data = await _get('/pokemon', {'limit': '$limit', 'offset': '$offset'});
-    if (data is! Map<String, dynamic>) throw ApiException('Format data tidak sesuai.');
+    final data = await _get('/pokemon', {
+      'limit': '$limit',
+      'offset': '$offset',
+    });
+    if (data is! Map<String, dynamic>) {
+      throw ApiException('Format data tidak sesuai.');
+    }
     return PokemonPage.fromJson(data);
   }
 
@@ -41,21 +48,26 @@ class PokemonApiService {
   Future<List<PokemonSummary>> searchByName(String query) async {
     final q = query.trim().toLowerCase();
     final all = await _allPokemon();
-    return all.where((p) => p.name.contains(q) || p.id.toString() == q).toList();
+    return all
+        .where((p) => p.name.contains(q) || p.id.toString() == q)
+        .toList();
   }
 
   /// GET /type/{nama}: semua Pokémon bertipe tertentu.
   Future<List<PokemonSummary>> fetchByType(String type) async {
     final data = await _get('/type/$type');
-    if (data is! Map<String, dynamic>) throw ApiException('Format data tidak sesuai.');
-    final list = (data['pokemon'] as List? ?? [])
-        .whereType<Map>()
-        .map((e) => e['pokemon'])
-        .whereType<Map<String, dynamic>>()
-        .map(PokemonSummary.fromJson)
-        .where((p) => isMainDex(p.id))
-        .toList()
-      ..sort((a, b) => a.id.compareTo(b.id));
+    if (data is! Map<String, dynamic>) {
+      throw ApiException('Format data tidak sesuai.');
+    }
+    final list =
+        (data['pokemon'] as List? ?? [])
+            .whereType<Map>()
+            .map((e) => e['pokemon'])
+            .whereType<Map<String, dynamic>>()
+            .map(PokemonSummary.fromJson)
+            .where((p) => isMainDex(p.id))
+            .toList()
+          ..sort((a, b) => a.id.compareTo(b.id));
     return list;
   }
 
@@ -66,15 +78,22 @@ class PokemonApiService {
     final speciesFuture = _getOrNull('/pokemon-species/$id');
     final detail = await detailFuture;
     final species = await speciesFuture;
-    if (detail is! Map<String, dynamic>) throw ApiException('Data Pokémon tidak ditemukan.');
-    return PokemonDetail.fromJson(detail, species is Map<String, dynamic> ? species : null);
+    if (detail is! Map<String, dynamic>) {
+      throw ApiException('Data Pokémon tidak ditemukan.');
+    }
+    return PokemonDetail.fromJson(
+      detail,
+      species is Map<String, dynamic> ? species : null,
+    );
   }
 
   Future<List<PokemonSummary>> _allPokemon() async {
     final cached = _allCache;
     if (cached != null) return cached;
     final data = await _get('/pokemon', {'limit': '2000', 'offset': '0'});
-    if (data is! Map<String, dynamic>) throw ApiException('Format data tidak sesuai.');
+    if (data is! Map<String, dynamic>) {
+      throw ApiException('Format data tidak sesuai.');
+    }
     final list = (data['results'] as List? ?? [])
         .whereType<Map<String, dynamic>>()
         .map(PokemonSummary.fromJson)
@@ -103,7 +122,9 @@ class PokemonApiService {
       } else if (response.statusCode == 404) {
         throw ApiException('Data tidak ditemukan (404).');
       } else if (response.statusCode >= 500) {
-        throw ApiException('Server sedang bermasalah (${response.statusCode}).');
+        throw ApiException(
+          'Server sedang bermasalah (${response.statusCode}).',
+        );
       } else {
         throw ApiException('Permintaan gagal (kode ${response.statusCode}).');
       }

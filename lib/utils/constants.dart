@@ -20,9 +20,24 @@ const String kAttributionUrl = 'https://pokeapi.co';
 
 /// 18 tipe Pokémon (nilai ini juga dipakai sebagai parameter endpoint /type/{nama}).
 const List<String> kTypes = [
-  'normal', 'fire', 'water', 'electric', 'grass', 'ice',
-  'fighting', 'poison', 'ground', 'flying', 'psychic', 'bug',
-  'rock', 'ghost', 'dragon', 'dark', 'steel', 'fairy',
+  'normal',
+  'fire',
+  'water',
+  'electric',
+  'grass',
+  'ice',
+  'fighting',
+  'poison',
+  'ground',
+  'flying',
+  'psychic',
+  'bug',
+  'rock',
+  'ghost',
+  'dragon',
+  'dark',
+  'steel',
+  'fairy',
 ];
 
 const Map<String, Color> kTypeColors = {

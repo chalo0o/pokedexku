@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '../utils/constants.dart';
 
 /// Header merah bersudut bawah bulat (dipakai Beranda dan Daftar).
@@ -23,7 +24,9 @@ class AppHeader extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
       decoration: const BoxDecoration(
         color: AppColors.primary,
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(AppRadius.sheet)),
+        borderRadius: BorderRadius.vertical(
+          bottom: Radius.circular(AppRadius.sheet),
+        ),
       ),
       child: SafeArea(
         bottom: false,
@@ -45,11 +48,21 @@ class AppHeader extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(title,
-                          style: GoogleFonts.poppins(
-                              fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
-                      Text(subtitle,
-                          style: GoogleFonts.poppins(fontSize: 11, color: Colors.white70)),
+                      Text(
+                        title,
+                        style: GoogleFonts.poppins(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Text(
+                        subtitle,
+                        style: GoogleFonts.poppins(
+                          fontSize: 11,
+                          color: Colors.white70,
+                        ),
+                      ),
                     ],
                   ),
                 ),

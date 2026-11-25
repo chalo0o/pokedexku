@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '../utils/constants.dart';
 
 class SearchBox extends StatelessWidget {
@@ -38,7 +39,10 @@ class SearchBox extends StatelessWidget {
               decoration: InputDecoration(
                 border: InputBorder.none,
                 hintText: hint,
-                hintStyle: GoogleFonts.poppins(fontSize: 13, color: AppColors.muted),
+                hintStyle: GoogleFonts.poppins(
+                  fontSize: 13,
+                  color: AppColors.muted,
+                ),
               ),
             ),
           ),
@@ -48,7 +52,11 @@ class SearchBox extends StatelessWidget {
                 ? const SizedBox.shrink()
                 : GestureDetector(
                     onTap: onClear ?? controller.clear,
-                    child: const Icon(Icons.close, color: AppColors.muted, size: 20),
+                    child: const Icon(
+                      Icons.close,
+                      color: AppColors.muted,
+                      size: 20,
+                    ),
                   ),
           ),
         ],

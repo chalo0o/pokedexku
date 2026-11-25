@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '../models/pokemon_model.dart';
 import '../services/pokemon_api_service.dart';
 import '../utils/constants.dart';
@@ -16,7 +17,12 @@ class ListPage extends StatefulWidget {
   final String query;
   final bool showBack;
 
-  const ListPage({super.key, this.type, this.query = '', this.showBack = false});
+  const ListPage({
+    super.key,
+    this.type,
+    this.query = '',
+    this.showBack = false,
+  });
 
   @override
   State<ListPage> createState() => _ListPageState();
@@ -88,7 +94,10 @@ class _ListPageState extends State<ListPage> {
     });
     final token = _token;
     try {
-      final page = await _api.fetchPage(limit: _pageSize, offset: _items.length);
+      final page = await _api.fetchPage(
+        limit: _pageSize,
+        offset: _items.length,
+      );
       if (!mounted || token != _token) return;
       setState(() {
         _items.addAll(page.results);
@@ -112,15 +121,17 @@ class _ListPageState extends State<ListPage> {
   }
 
   void _reload() => setState(() {
-        _loadingMore = false;
-        _future = _loadFirst();
-      });
+    _loadingMore = false;
+    _future = _loadFirst();
+  });
 
   Future<void> _refresh() async {
     _reload();
     try {
       await _future;
-    } catch (_) {/* error ditampilkan oleh FutureBuilder */}
+    } catch (_) {
+      /* error ditampilkan oleh FutureBuilder */
+    }
   }
 
   void _search(String q) {
@@ -195,13 +206,23 @@ class _ListPageState extends State<ListPage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Flexible(
-                child: Text(_title,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.poppins(
-                        fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.text)),
+                child: Text(
+                  _title,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.text,
+                  ),
+                ),
               ),
-              Text('${_items.length}${_hasMore ? '+' : ''} Pokémon',
-                  style: GoogleFonts.poppins(fontSize: 11, color: AppColors.muted)),
+              Text(
+                '${_items.length}${_hasMore ? '+' : ''} Pokémon',
+                style: GoogleFonts.poppins(
+                  fontSize: 11,
+                  color: AppColors.muted,
+                ),
+              ),
             ],
           ),
         ),
@@ -214,8 +235,10 @@ class _ListPageState extends State<ListPage> {
                     children: [
                       const SizedBox(height: 80),
                       Center(
-                        child: Text('Tidak ada Pokémon ditemukan.',
-                            style: GoogleFonts.poppins(color: AppColors.muted)),
+                        child: Text(
+                          'Tidak ada Pokémon ditemukan.',
+                          style: GoogleFonts.poppins(color: AppColors.muted),
+                        ),
                       ),
                     ],
                   )
@@ -226,12 +249,13 @@ class _ListPageState extends State<ListPage> {
                       SliverPadding(
                         padding: const EdgeInsets.symmetric(horizontal: 20),
                         sliver: SliverGrid(
-                          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                            maxCrossAxisExtent: 170,
-                            mainAxisSpacing: 12,
-                            crossAxisSpacing: 12,
-                            childAspectRatio: 0.85,
-                          ),
+                          gridDelegate:
+                              const SliverGridDelegateWithMaxCrossAxisExtent(
+                                maxCrossAxisExtent: 170,
+                                mainAxisSpacing: 12,
+                                crossAxisSpacing: 12,
+                                childAspectRatio: 0.85,
+                              ),
                           delegate: SliverChildBuilderDelegate(
                             (_, i) => PokemonCard(pokemon: _items[i]),
                             childCount: _items.length,
@@ -251,23 +275,34 @@ class _ListPageState extends State<ListPage> {
     Widget child;
     if (_loadingMore) {
       child = const SizedBox(
-          width: 24,
-          height: 24,
-          child: CircularProgressIndicator(strokeWidth: 2.5, color: AppColors.primary));
+        width: 24,
+        height: 24,
+        child: CircularProgressIndicator(
+          strokeWidth: 2.5,
+          color: AppColors.primary,
+        ),
+      );
     } else if (_moreError != null) {
       child = TextButton.icon(
         onPressed: _loadMore,
         icon: const Icon(Icons.refresh, color: AppColors.primary),
-        label: Text('Gagal memuat. Coba lagi',
-            style: GoogleFonts.poppins(fontSize: 12, color: AppColors.primary)),
+        label: Text(
+          'Gagal memuat. Coba lagi',
+          style: GoogleFonts.poppins(fontSize: 12, color: AppColors.primary),
+        ),
       );
     } else if (!_hasMore) {
-      child = Text('- akhir daftar -',
-          style: GoogleFonts.poppins(fontSize: 11, color: AppColors.muted));
+      child = Text(
+        '- akhir daftar -',
+        style: GoogleFonts.poppins(fontSize: 11, color: AppColors.muted),
+      );
     } else {
       child = const SizedBox.shrink();
     }
-    return Padding(padding: const EdgeInsets.all(20), child: Center(child: child));
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Center(child: child),
+    );
   }
 
   Widget _typeChips() {
@@ -280,14 +315,21 @@ class _ListPageState extends State<ListPage> {
         children: [
           _chip('Semua', noFilter, AppColors.primary, () => _selectType(null)),
           for (final t in kTypes)
-            _chip(titleCase(t), _type == t && _query.isEmpty, typeColor(t), () => _selectType(t)),
+            _chip(
+              titleCase(t),
+              _type == t && _query.isEmpty,
+              typeColor(t),
+              () => _selectType(t),
+            ),
         ],
       ),
     );
   }
 
   Widget _chip(String label, bool selected, Color color, VoidCallback onTap) {
-    final fg = selected && color.computeLuminance() <= 0.5 ? Colors.white : AppColors.text;
+    final fg = selected && color.computeLuminance() <= 0.5
+        ? Colors.white
+        : AppColors.text;
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: ChoiceChip(

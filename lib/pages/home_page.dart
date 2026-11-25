@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '../models/pokemon_model.dart';
 import '../services/pokemon_api_service.dart';
 import '../utils/constants.dart';
@@ -64,13 +65,17 @@ class _HomePageState extends State<HomePage> {
     _reload();
     try {
       await _future;
-    } catch (_) {/* error ditampilkan oleh FutureBuilder */}
+    } catch (_) {
+      /* error ditampilkan oleh FutureBuilder */
+    }
   }
 
   void _openList({String? type, String query = ''}) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => ListPage(type: type, query: query, showBack: true)),
+      MaterialPageRoute(
+        builder: (_) => ListPage(type: type, query: query, showBack: true),
+      ),
     );
   }
 
@@ -101,7 +106,8 @@ class _HomePageState extends State<HomePage> {
                   spacing: 8,
                   runSpacing: 8,
                   children: [
-                    for (final t in kTypes) TypeBadge(t, onTap: () => _openList(type: t)),
+                    for (final t in kTypes)
+                      TypeBadge(t, onTap: () => _openList(type: t)),
                   ],
                 ),
               ),
@@ -116,7 +122,9 @@ class _HomePageState extends State<HomePage> {
                   // 2. ERROR
                   if (snap.hasError) {
                     return SizedBox(
-                        height: 260, child: ErrorView(error: snap.error!, onRetry: _reload));
+                      height: 260,
+                      child: ErrorView(error: snap.error!, onRetry: _reload),
+                    );
                   }
                   // 3. SUCCESS
                   final items = snap.data!;
@@ -127,7 +135,10 @@ class _HomePageState extends State<HomePage> {
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       itemCount: items.length,
                       separatorBuilder: (_, _) => const SizedBox(width: 12),
-                      itemBuilder: (_, i) => SizedBox(width: 140, child: PokemonCard(pokemon: items[i])),
+                      itemBuilder: (_, i) => SizedBox(
+                        width: 140,
+                        child: PokemonCard(pokemon: items[i]),
+                      ),
                     ),
                   );
                 },
@@ -161,12 +172,20 @@ class _HomePageState extends State<HomePage> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.lightbulb_outline, color: AppColors.primaryDark),
+                      const Icon(
+                        Icons.lightbulb_outline,
+                        color: AppColors.primaryDark,
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: Text(_fact,
-                            style: GoogleFonts.poppins(
-                                fontSize: 12, height: 1.5, color: AppColors.text)),
+                        child: Text(
+                          _fact,
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            height: 1.5,
+                            color: AppColors.text,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -177,18 +196,26 @@ class _HomePageState extends State<HomePage> {
               Center(
                 child: TextButton(
                   onPressed: () => openUrl(context, kAttributionUrl),
-                  child: Text('Data dari PokéAPI (pokeapi.co)',
-                      style: GoogleFonts.poppins(
-                          fontSize: 11,
-                          color: AppColors.muted,
-                          decoration: TextDecoration.underline)),
+                  child: Text(
+                    'Data dari PokéAPI (pokeapi.co)',
+                    style: GoogleFonts.poppins(
+                      fontSize: 11,
+                      color: AppColors.muted,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
                 ),
               ),
               Center(
                 child: Padding(
                   padding: const EdgeInsets.only(bottom: 16),
-                  child: Text('Pokémon dan nama karakternya adalah merek dagang Nintendo.',
-                      style: GoogleFonts.poppins(fontSize: 9, color: AppColors.muted)),
+                  child: Text(
+                    'Pokémon dan nama karakternya adalah merek dagang Nintendo.',
+                    style: GoogleFonts.poppins(
+                      fontSize: 9,
+                      color: AppColors.muted,
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -204,14 +231,24 @@ class _HomePageState extends State<HomePage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(title,
-              style: GoogleFonts.poppins(
-                  fontSize: 17, fontWeight: FontWeight.w600, color: AppColors.text)),
+          Text(
+            title,
+            style: GoogleFonts.poppins(
+              fontSize: 17,
+              fontWeight: FontWeight.w600,
+              color: AppColors.text,
+            ),
+          ),
           if (action != null)
             GestureDetector(
               onTap: widget.onSeeAll,
-              child: Text(action,
-                  style: GoogleFonts.poppins(fontSize: 11, color: AppColors.primary)),
+              child: Text(
+                action,
+                style: GoogleFonts.poppins(
+                  fontSize: 11,
+                  color: AppColors.primary,
+                ),
+              ),
             ),
         ],
       ),

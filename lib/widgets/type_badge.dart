@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '../utils/constants.dart';
 import '../utils/formatters.dart';
 
@@ -17,9 +18,18 @@ class TypeBadge extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-        decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(20)),
-        child: Text(titleCase(type),
-            style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600, color: fg)),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          titleCase(type),
+          style: GoogleFonts.poppins(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: fg,
+          ),
+        ),
       ),
     );
   }

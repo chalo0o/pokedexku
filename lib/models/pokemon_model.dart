@@ -35,7 +35,11 @@ class PokemonPage {
   final bool hasNext;
   final List<PokemonSummary> results;
 
-  const PokemonPage({required this.count, required this.hasNext, required this.results});
+  const PokemonPage({
+    required this.count,
+    required this.hasNext,
+    required this.results,
+  });
 
   factory PokemonPage.fromJson(Map<String, dynamic> json) {
     final all = (json['results'] as List? ?? [])
